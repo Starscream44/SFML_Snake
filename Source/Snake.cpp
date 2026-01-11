@@ -72,9 +72,9 @@ namespace SnakeGame
     void Snake::Update(float dt)
     {
         m_timer += dt;
-        while (m_timer >= MoveInterval)
+        while (m_timer >= m_moveInterval)
         {
-            m_timer -= MoveInterval;
+            m_timer -= m_moveInterval;
             Step();
         }
     }
@@ -169,6 +169,25 @@ namespace SnakeGame
         for (const auto& c : m_cells)
             if (c.x == cell.x && c.y == cell.y)
                 return true;
+        return false;
+    }
+
+    void Snake::SetMoveInterval(float seconds)
+    {
+        m_moveInterval = seconds;
+    }
+
+    bool Snake::IsSelfCollision() const
+    {
+        if (m_cells.size() < 4) 
+            return false;
+
+        const auto& h = m_cells.front();
+        for (size_t i = 1; i < m_cells.size(); ++i)
+        {
+            if (m_cells[i].x == h.x && m_cells[i].y == h.y)
+                return true;
+        }
         return false;
     }
 }

@@ -24,11 +24,14 @@ namespace SnakeGame
 
         bool OccupiesCell(const Position2D& cell) const;
 
+        void SetMoveInterval(float seconds);
+
+        bool IsSelfCollision() const;
+
     private:
         sf::Vector2f CellToPixels(const Position2D& cell) const;
 		void Step(); //one movement step
 
-    private:
         std::vector<Position2D> m_cells;
 
         Direction m_dir = Direction::Right;
@@ -37,5 +40,7 @@ namespace SnakeGame
         int m_pendingGrow = 0;
 
         sf::Texture m_texHead, m_texBody, m_texTail;
+
+        float m_moveInterval = MoveInterval;
     };
 }

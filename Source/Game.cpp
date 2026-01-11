@@ -53,19 +53,142 @@ namespace SnakeGame
             if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape)
                 m_window.close();
         }
+
+        if (e.type == sf::Event::KeyPressed && m_state == GameState::MainMenu)
+        {
+            if (e.key.code == sf::Keyboard::Up)
+                m_ui.MainMenuMoveUp();
+
+            if (e.key.code == sf::Keyboard::Down)
+                m_ui.MainMenuMoveDown();
+        }
+
+        if (e.type == sf::Event::KeyPressed && m_state == GameState::ModeSelect)
+        {
+            if (e.key.code == sf::Keyboard::Up)
+                m_ui.ModeMoveUp();
+
+            if (e.key.code == sf::Keyboard::Down)
+                m_ui.ModeMoveDown();
+
+            if (e.key.code == sf::Keyboard::Return)
+            {
+                const int sel = m_ui.GetModeIndex(); // 0 easy, 1 medium, 2 hard
+
+                if (sel == 0) m_difficulty = Difficulty::Easy;
+                if (sel == 1) m_difficulty = Difficulty::Medium;
+                if (sel == 2) m_difficulty = Difficulty::Hard;
+
+                StartNewGame();
+                m_state = GameState::Playing;
+            }
+         
+        }
+
+        if (e.type == sf::Event::KeyPressed && m_state == GameState::GameOver)
+        {
+            if (e.key.code == sf::Keyboard::Up)
+                m_ui.GameOverMoveUp();
+
+            if (e.key.code == sf::Keyboard::Down)
+                m_ui.GameOverMoveDown();
+        }
     }
 
     void Game::Update(float dt)
     {
+        // ENTER for menus (one-shot)
+        const bool enterNow = sf::Keyboard::isKeyPressed(sf::Keyboard::Return);
+        if (m_state == GameState::MainMenu)
+        {
+            if (enterNow && !m_enterHeld)
+            {
+                const int sel = m_ui.GetMainMenuIndex();
+
+                if (sel == 0)
+                {
+                    m_state = GameState::ModeSelect;
+                    m_enterHeld = true; 
+                }
+                else if (sel == 1)
+                {
+                    m_state = GameState::Records;
+                    m_enterHeld = true;
+                }
+                else if (sel == 2)
+                {
+                    m_window.close();
+                    m_enterHeld = true;
+                }
+            }
+        }
+
+        if (m_state == GameState::ModeSelect)
+        {
+            if (enterNow && !m_enterHeld)
+            {
+                const int sel = m_ui.GetModeIndex(); // 0 easy, 1 medium, 2 hard
+
+                if (sel == 0) m_difficulty = Difficulty::Easy;
+                if (sel == 1) m_difficulty = Difficulty::Medium;
+                if (sel == 2) m_difficulty = Difficulty::Hard;
+
+                StartNewGame();
+                m_state = GameState::Playing;
+                m_enterHeld = true;
+            }
+        }
+
+        if (m_state == GameState::GameOver)
+        {
+            if (enterNow && !m_enterHeld)
+            {
+                const int sel = m_ui.GetGameOverIndex(); // 0 Restart, 1 Exit
+
+                if (sel == 0)
+                {
+                    m_state = GameState::ModeSelect;
+                    m_enterHeld = true;
+                }
+                else if (sel == 1)
+                {
+                    m_window.close();
+                    m_enterHeld = true;
+                }
+            }
+        }
+
+        // remember key state
+        m_enterHeld = enterNow;
+
+        if (m_state != GameState::Playing)
+            return;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) m_snake.SetDirection(Direction::Up);
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) m_snake.SetDirection(Direction::Down);
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) m_snake.SetDirection(Direction::Left);
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) m_snake.SetDirection(Direction::Right);
 
         m_snake.Update(dt);
+        const auto& h = m_snake.HeadCell();
+
+        // death by wall
+        if (m_walls.IsWallCell(h))
+        {
+            m_state = GameState::GameOver;
+            m_enterHeld = true; 
+            return;
+        }
+
+        // death by self
+        if (m_snake.IsSelfCollision())
+        {
+            m_state = GameState::GameOver;
+            m_enterHeld = true;
+            return;
+        }
 
 		//apple collision
-        const auto& h = m_snake.HeadCell();
+        
         for (auto& a : m_apples)
         {
             if (a.Cell().x == h.x && a.Cell().y == h.y)
@@ -74,6 +197,16 @@ namespace SnakeGame
                 RespawnApple(a);
 
                 m_score += 1;
+
+                if (m_difficulty == Difficulty::Hard)
+                {
+                    m_currentMoveInterval -= HardStep;
+                    if (m_currentMoveInterval < HardMinInterval)
+                        m_currentMoveInterval = HardMinInterval;
+
+                    m_snake.SetMoveInterval(m_currentMoveInterval);
+                }
+
                 m_ui.SetScore(m_score);
 
                 break;
@@ -84,6 +217,27 @@ namespace SnakeGame
     void Game::Render()
     {
         m_window.clear();
+
+        if (m_state == GameState::MainMenu)
+        {
+            m_ui.DrawMainMenu(m_window);
+            m_window.display();
+            return;
+        }
+
+        if (m_state == GameState::ModeSelect)
+        {
+            m_ui.DrawModeSelect(m_window);
+            m_window.display();
+            return;
+        }
+
+        if (m_state == GameState::GameOver)
+        {
+            m_ui.DrawGameOver(m_window);
+            m_window.display();
+            return;
+        }
 
 		//Draw background for HUD
         sf::RectangleShape hud;
@@ -167,4 +321,26 @@ namespace SnakeGame
             ++spawned;
         }
     }
+
+    void Game::StartNewGame()
+    {
+        m_score = 0;
+        m_ui.SetScore(m_score);
+
+        m_hardApplesEaten = 0;
+
+        
+        if (m_difficulty == Difficulty::Easy)
+            m_baseMoveInterval = MoveInterval * 1.5f;   
+        else
+            m_baseMoveInterval = MoveInterval;          
+
+        m_currentMoveInterval = m_baseMoveInterval;
+        m_snake.SetMoveInterval(m_currentMoveInterval);
+
+
+        m_snake.Init({ 10, 7 }, 4, Direction::Right);
+        SpawnApples(DefaultAppleCount);
+    }
 }
+
