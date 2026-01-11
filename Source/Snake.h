@@ -26,7 +26,7 @@ namespace SnakeGame
 
     private:
         sf::Vector2f CellToPixels(const Position2D& cell) const;
-        void Step(); // один “шаг” змеи по сетке
+		void Step(); //one movement step
 
     private:
         std::vector<Position2D> m_cells;

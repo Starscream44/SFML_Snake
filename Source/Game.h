@@ -23,7 +23,7 @@ namespace SnakeGame
         void Update(float dt);
         void Render();
 
-        // €блоки
+        //apples
         void SpawnApples(int count);
         void RespawnApple(Apple& a);
         Position2D RandomCell();
@@ -36,15 +36,15 @@ namespace SnakeGame
 
         Snake m_snake;
 
-        //счетчик очков
+        //score points 
         UI m_ui;
         int m_score = 0;
 
-        // €блоки
+        //apples
         sf::Texture m_texApple;
         std::vector<Apple> m_apples;
 
-        // рандом
+		//for random positions
         std::mt19937 m_rng{ std::random_device{}() };
 
         Wall m_walls;

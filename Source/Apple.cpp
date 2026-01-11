@@ -17,7 +17,7 @@ namespace SnakeGame
         m_sprite.setTexture(tex);
 
         const auto ts = tex.getSize();
-        if (ts.x == 0 || ts.y == 0) return; // на всякий, если файл не загрузился
+        if (ts.x == 0 || ts.y == 0) return;
 
         m_sprite.setOrigin(ts.x * 0.5f, ts.y * 0.5f);
         m_sprite.setScale((float)CellSize / ts.x, (float)CellSize / ts.y);

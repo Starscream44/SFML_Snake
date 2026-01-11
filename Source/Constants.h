@@ -6,7 +6,7 @@ namespace SnakeGame
     constexpr int GridW = 25;
     constexpr int GridH = 18;
 
-    constexpr int HudHeight = 64;                 // полоса сверху
+    constexpr int HudHeight = 64;                //HUD
     constexpr int WindowWidth = GridW * CellSize;
     constexpr int WindowHeight = HudHeight + GridH * CellSize;
 

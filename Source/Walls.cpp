@@ -7,7 +7,7 @@ namespace SnakeGame
     {
 
         if (!m_tex.loadFromFile(path)) return false;
-        m_tex.setSmooth(false);   // важно: убирает "швы" при масштабировании
+        m_tex.setSmooth(false);  
         return true;
     }
 
@@ -19,22 +19,22 @@ namespace SnakeGame
         m_cells.clear();
         if (gridW <= 0 || gridH <= 0) return;
 
-        // верхняя строка (y = 0)
+        //up (y = 0)
         for (int x = 0; x < gridW; ++x)
             m_cells.push_back({ x, 0 });
 
-        // нижняя строка (y = gridH - 1)
+        //down (y = gridH - 1)
         if (gridH > 1)
         {
             for (int x = 0; x < gridW; ++x)
                 m_cells.push_back({ x, gridH - 1 });
         }
 
-        // левая колонка (x = 0), без углов (чтобы не дублировать)
+        //left (x = 0)
         for (int y = 1; y < gridH - 1; ++y)
             m_cells.push_back({ 0, y });
 
-        // правая колонка (x = gridW - 1), без углов
+        //right (x = gridW - 1)
         if (gridW > 1)
         {
             for (int y = 1; y < gridH - 1; ++y)
@@ -44,7 +44,7 @@ namespace SnakeGame
 
     bool Wall::IsWallCell(const Position2D& cell) const
     {
-        // Быстрая проверка по границе, без перебора массива
+        
         if (m_gridW <= 0 || m_gridH <= 0) return false;
         return (cell.x == 0 || cell.y == 0 || cell.x == (m_gridW - 1) || cell.y == (m_gridH - 1));
 
@@ -64,17 +64,15 @@ namespace SnakeGame
         sf::Sprite s;
         s.setTexture(m_tex);
 
-        // ВАЖНО: для стен — без центра
+       
         s.setOrigin(0.f, 0.f);
 
-        // Если wall.png = 32x32 и CellSize=32, то масштаб = 1
-        // Но оставим формулу, чтобы не зависеть от размеров файла
         auto ts = m_tex.getSize();
         s.setScale((float)CellSize / ts.x, (float)CellSize / ts.y);
 
         for (const auto& c : m_cells)
         {
-            s.setPosition(CellToPixels(c));   // <-- вот так
+            s.setPosition(CellToPixels(c));
             window.draw(s);
         }
     }

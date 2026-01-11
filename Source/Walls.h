@@ -26,7 +26,7 @@ namespace SnakeGame
         int m_gridW = 0;
         int m_gridH = 0;
 
-        std::vector<Position2D> m_cells; // все клетки стен по периметру
+        std::vector<Position2D> m_cells;
         sf::Texture m_tex;
     };
 }

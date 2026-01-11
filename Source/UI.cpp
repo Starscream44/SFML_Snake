@@ -1,5 +1,5 @@
 #include "UI.h"
-#include "Constants.h" // WindowWidth, HudHeight
+#include "Constants.h" 
 
 namespace SnakeGame
 {
@@ -9,7 +9,7 @@ namespace SnakeGame
             return false;
 
         m_scoreText.setFont(m_font);
-        m_scoreText.setCharacterSize(28);     // подгони потом под вкус
+        m_scoreText.setCharacterSize(28);   
         m_scoreText.setFillColor(sf::Color::White);
 
         UpdateText();
@@ -26,11 +26,11 @@ namespace SnakeGame
     {
         m_scoreText.setString("SCORE " + std::to_string(m_score));
 
-        // центрирование по тексту
+        
         auto b = m_scoreText.getLocalBounds();
         m_scoreText.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
 
-        // позиция по центру HUD-панели
+      
         m_scoreText.setPosition((float)WindowWidth * 0.5f, (float)HudHeight * 0.5f);
     }
 

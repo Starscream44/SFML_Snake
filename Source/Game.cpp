@@ -11,6 +11,7 @@ namespace SnakeGame
         const int gridW = GridW;
         const int gridH = GridH;
 
+		//reset score
         m_score = 0;
 
         if (!m_ui.LoadFont("Resources/font.ttf"))
@@ -63,7 +64,7 @@ namespace SnakeGame
 
         m_snake.Update(dt);
 
-        // съели €блоко?
+		//apple collision
         const auto& h = m_snake.HeadCell();
         for (auto& a : m_apples)
         {
@@ -84,11 +85,11 @@ namespace SnakeGame
     {
         m_window.clear();
 
-        // HUD панель сверху
+		//Draw background for HUD
         sf::RectangleShape hud;
         hud.setSize(sf::Vector2f((float)WindowWidth, (float)HudHeight));
         hud.setPosition(0.f, 0.f);
-        hud.setFillColor(sf::Color(40, 80, 40)); // любой УзелЄныйФ под стиль
+        hud.setFillColor(sf::Color(40, 80, 40));
         m_window.draw(hud);
 
         m_walls.Draw(m_window);

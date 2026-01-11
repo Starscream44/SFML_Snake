@@ -15,7 +15,6 @@ namespace SnakeGame
     private:
         void UpdateText();
 
-    private:
         sf::Font m_font;
         sf::Text m_scoreText;
 

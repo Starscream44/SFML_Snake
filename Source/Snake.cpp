@@ -51,7 +51,7 @@ namespace SnakeGame
             {
             case Direction::Right: cell.x -= 1; break;
             case Direction::Left:  cell.x += 1; break;
-            case Direction::Up:    cell.y += 1; break; // SFML: вверх = y-1, значит "хвост" вниз = y+1
+            case Direction::Up:    cell.y += 1; break;
             case Direction::Down:  cell.y -= 1; break;
             }
             m_cells.push_back(cell);
@@ -93,11 +93,11 @@ namespace SnakeGame
         {
         case Direction::Right: newHead.x += 1; break;
         case Direction::Left:  newHead.x -= 1; break;
-        case Direction::Up:    newHead.y -= 1; break; // SFML: вверх = y-1
+        case Direction::Up:    newHead.y -= 1; break; 
         case Direction::Down:  newHead.y += 1; break;
         }
 
-        // TODO позже: столкновение со стенами/самой собой
+      
 
         m_cells.insert(m_cells.begin(), newHead);
 
@@ -127,18 +127,18 @@ namespace SnakeGame
 
             if (i == 0)
             {
-                // голова Ч по текущему направлению движени€
+				//head move direction
                 s.setRotation(RotationForDir(m_dir));
             }
             else if (i == m_cells.size() - 1 && m_cells.size() >= 2)
             {
-                // хвост Ч по направлению предпоследний -> последний
+				//tail last segment direction
                 auto tailDir = DirFromTo(m_cells[m_cells.size() - 2], m_cells[m_cells.size() - 1]);
                 s.setRotation(RotationForDir(tailDir));
             }
             else
             {
-                // тело Ч просто горизонт/вертик
+				//body segment direction
                 auto bodyDir = DirFromTo(m_cells[i - 1], m_cells[i]);
 
                 if (bodyDir == Direction::Left || bodyDir == Direction::Right)
@@ -150,13 +150,13 @@ namespace SnakeGame
 
             auto ts = s.getTexture()->getSize();
 
-            // вращаем вокруг центра текстуры
+			//rotate around center
             s.setOrigin(ts.x * 0.5f, ts.y * 0.5f);
 
-            // масштаб под клетку
+			//scale to cell size
             s.setScale((float)CellSize / ts.x, (float)CellSize / ts.y);
 
-            // позици€ = центр клетки
+			//position to center of cell
             sf::Vector2f pos = CellToPixels(m_cells[i]) + sf::Vector2f(CellSize * 0.5f, CellSize * 0.5f);
             s.setPosition(pos);
 
