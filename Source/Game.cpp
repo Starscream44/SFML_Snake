@@ -33,6 +33,14 @@ namespace SnakeGame
         m_snake.Init({ 10, 7 }, 4, Direction::Right);
         SpawnApples(DefaultAppleCount);
 
+        m_records.Load(RecordsFileName);
+
+        if (m_records.Get().empty())
+        {
+            m_records.Add("XYZ", 1, RecordsMaxCount);
+            m_records.Save(RecordsFileName);
+        }
+
         while (m_window.isOpen() && m_running)
         {
             const float dt = m_clock.restart().asSeconds();
@@ -40,6 +48,15 @@ namespace SnakeGame
             Update(dt);
             Render();
         }
+    }
+
+    static void PushTopToUI(UI& ui, const RecordsTable& recs)
+    {
+        auto top = recs.Get();
+        if (top.size() > RecordsPopupCount)
+            top.resize(RecordsPopupCount);
+
+        ui.SetRecords(top);
     }
 
     void Game::ProcessEvents()
@@ -52,6 +69,56 @@ namespace SnakeGame
 
             if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Escape)
                 m_window.close();
+            // --- Name input: read typed characters ---
+            if (m_state == GameState::NameInput)
+            {
+				// 1) Symbols input
+                if (e.type == sf::Event::TextEntered)
+                {
+                    const uint32_t ch = e.text.unicode;
+
+                   
+                    if (ch >= 32 && ch <= 126)
+                    {
+                        const char c = static_cast<char>(ch);
+
+                        auto isAllowed = [](char x)
+                            {
+                                return (x >= 'A' && x <= 'Z') ||
+                                    (x >= 'a' && x <= 'z') ||
+                                    (x >= '0' && x <= '9') ||
+                                    x == '_' || x == '-';
+                            };
+
+                        if (isAllowed(c))
+                        {
+							if (m_nameBuffer.size() < 12) //lenght limit
+                                m_nameBuffer.push_back(c);
+                        }
+                    }
+                }
+
+                // 2) Backspace
+                if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::BackSpace)
+                {
+                    if (!m_nameBuffer.empty())
+                        m_nameBuffer.pop_back();
+                }
+
+				// 3) Enter 
+                if (e.type == sf::Event::KeyPressed && e.key.code == sf::Keyboard::Enter)
+                {
+                    std::string finalName = m_nameBuffer.empty() ? "XYZ" : m_nameBuffer;
+
+                    m_records.Add(finalName, m_score, RecordsMaxCount);
+                    m_records.Save(RecordsFileName);
+
+                    PushTopToUI(m_ui, m_records);
+
+                    m_state = GameState::GameOver;
+                    m_enterHeld = true;
+                }
+            }
         }
 
         if (e.type == sf::Event::KeyPressed && m_state == GameState::MainMenu)
@@ -112,8 +179,15 @@ namespace SnakeGame
                 }
                 else if (sel == 1)
                 {
+                    auto top = m_records.Get();
+                    if (top.size() > RecordsMaxCount)
+                        top.resize(RecordsMaxCount);
+
+                    m_ui.SetRecords(top);
+
                     m_state = GameState::Records;
                     m_enterHeld = true;
+                    return;
                 }
                 else if (sel == 2)
                 {
@@ -158,6 +232,61 @@ namespace SnakeGame
             }
         }
 
+        if (m_state == GameState::Records)
+        {
+            if (enterNow && !m_enterHeld)
+            {
+                m_state = GameState::MainMenu;
+                m_enterHeld = true;
+                return;
+            }
+
+            m_enterHeld = enterNow;
+            return;
+        }
+       
+        if (m_state == GameState::AskName)
+        {
+            //NO/YES
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+                m_ui.AskNameMoveUp();
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+                m_ui.AskNameMoveDown();
+
+
+
+            // Enter
+            if (enterNow && !m_enterHeld)
+            {
+                const int sel = m_ui.GetAskNameIndex(); // 0 NO, 1 YES
+
+                if (sel == 0) // NO
+                {
+                    m_records.Add("XYZ", m_score, RecordsMaxCount);
+                    m_records.Save(RecordsFileName);
+
+                    PushTopToUI(m_ui, m_records);
+
+                    m_state = GameState::GameOver;
+                    m_enterHeld = true;
+                    return;
+                }
+                else // YES
+                {
+                    m_nameBuffer.clear();
+                    m_state = GameState::NameInput;
+                    m_enterHeld = true;
+                    return;
+                }
+            }
+
+            
+            m_enterHeld = enterNow;
+            return;
+        }
+
+
         // remember key state
         m_enterHeld = enterNow;
 
@@ -174,15 +303,49 @@ namespace SnakeGame
         // death by wall
         if (m_walls.IsWallCell(h))
         {
-            m_state = GameState::GameOver;
-            m_enterHeld = true; 
+            const bool isHigh = m_records.IsHighScore(m_score, RecordsMaxCount);
+
+            if (isHigh)
+            {
+                m_selectedYesNo = 0;   // default NO
+                m_nameBuffer = "XYZ";  // default name
+                m_state = GameState::AskName;
+            }
+            else
+            {
+                auto top = m_records.Get();
+                if (top.size() > RecordsPopupCount)
+                    top.resize(RecordsPopupCount);
+
+                m_ui.SetRecords(top);
+                m_state = GameState::GameOver;
+            }
+
+            m_enterHeld = true;
             return;
         }
 
         // death by self
         if (m_snake.IsSelfCollision())
         {
-            m_state = GameState::GameOver;
+            const bool isHigh = m_records.IsHighScore(m_score, RecordsMaxCount);
+
+            if (isHigh)
+            {
+                m_selectedYesNo = 0;
+                m_nameBuffer = "XYZ";
+                m_state = GameState::AskName;
+            }
+            else
+            {
+                auto top = m_records.Get();
+                if (top.size() > RecordsPopupCount)
+                    top.resize(RecordsPopupCount);
+
+                m_ui.SetRecords(top);
+                m_state = GameState::GameOver;
+            }
+
             m_enterHeld = true;
             return;
         }
@@ -238,6 +401,29 @@ namespace SnakeGame
             m_window.display();
             return;
         }
+
+        if (m_state == GameState::AskName)
+        {
+            m_ui.DrawAskName(m_window);
+            m_window.display();
+            return;
+        }
+
+        if (m_state == GameState::NameInput)
+        {
+            m_ui.SetNameBuffer(m_nameBuffer);
+            m_ui.DrawNameInput(m_window);
+            m_window.display();
+            return;
+        }
+
+        if (m_state == GameState::Records)
+        {
+            m_ui.DrawRecords(m_window);
+            m_window.display();
+            return;
+        }
+
 
 		//Draw background for HUD
         sf::RectangleShape hud;

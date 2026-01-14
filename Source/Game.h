@@ -3,12 +3,14 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <random>
+#include <string>
 
 #include "Constants.h"
 #include "Types.h"
 #include "Snake.h"
 #include "Apple.h"
 #include "Walls.h"
+#include "Records.h"
 #include "UI.h"
 
 namespace SnakeGame
@@ -19,6 +21,8 @@ namespace SnakeGame
         Records,
         ModeSelect,
         Playing,
+        AskName,
+        NameInput,
         GameOver
     };
 
@@ -78,6 +82,11 @@ namespace SnakeGame
         float m_currentMoveInterval = MoveInterval;
         static constexpr float HardMinInterval = 0.06f;  
         static constexpr float HardStep = 0.005f;
+
+        RecordsTable m_records;
+
+        int m_selectedYesNo = 0;        // 0 = NO, 1 = YES
+        std::string m_nameBuffer = "XYZ";
     };
 
    

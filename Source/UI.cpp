@@ -104,6 +104,57 @@ namespace SnakeGame
         m_gameOverIndex = 0;
         UpdateGameOverVisual();
 
+        // --- AskName popup texts ---
+        m_askNameTitle.setFont(m_font);
+        m_askNameTitle.setString("ENTER NAME");
+        m_askNameTitle.setCharacterSize(48);
+        m_askNameTitle.setFillColor(sf::Color::White);
+        {
+            auto b = m_askNameTitle.getLocalBounds();
+            m_askNameTitle.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+            m_askNameTitle.setPosition((float)WindowWidth * 0.5f, 240.0f);
+        }
+
+        auto setupAskItem = [&](sf::Text& t, const std::string& s, float y)
+            {
+                t.setFont(m_font);
+                t.setString(s);
+                t.setCharacterSize(56);
+                t.setFillColor(sf::Color::White);
+
+                auto b = t.getLocalBounds();
+                t.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+                t.setPosition((float)WindowWidth * 0.5f, y);
+            };
+
+        setupAskItem(m_askNo, "NO", 340.0f);
+        setupAskItem(m_askYes, "YES", 420.0f);
+
+        m_askNameIndex = 0;
+        UpdateAskNameVisual();
+
+
+        // --- NameInput popup texts ---
+        m_nameInputTitle.setFont(m_font);
+        m_nameInputTitle.setString("TYPE NAME");
+        m_nameInputTitle.setCharacterSize(48);
+        m_nameInputTitle.setFillColor(sf::Color::White);
+        {
+            auto b = m_nameInputTitle.getLocalBounds();
+            m_nameInputTitle.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+            m_nameInputTitle.setPosition((float)WindowWidth * 0.5f, 240.0f);
+        }
+
+        m_nameInputValue.setFont(m_font);
+        m_nameInputValue.setCharacterSize(56);
+        m_nameInputValue.setFillColor(sf::Color::Green);
+        m_nameInputValue.setString(m_nameBuffer);
+        {
+            auto b = m_nameInputValue.getLocalBounds();
+            m_nameInputValue.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+            m_nameInputValue.setPosition((float)WindowWidth * 0.5f, 380.0f);
+        }
+
         return true;
     }
 
@@ -213,6 +264,8 @@ namespace SnakeGame
         window.draw(m_gameOverTitle);
         window.draw(m_goRestart);
         window.draw(m_goExit);
+        for (const auto& t : m_recordsText)
+            window.draw(t);
     }
 
     void UI::UpdateGameOverVisual()
@@ -241,5 +294,147 @@ namespace SnakeGame
     int UI::GetGameOverIndex() const
     {
         return m_gameOverIndex;
+    }
+
+    void UI::UpdateAskNameVisual()
+    {
+        m_askNo.setFillColor(sf::Color::White);
+        m_askYes.setFillColor(sf::Color::White);
+
+        
+        if (m_askNameIndex == 0) m_askNo.setFillColor(sf::Color::Green);
+        if (m_askNameIndex == 1) m_askYes.setFillColor(sf::Color::Green);
+    }
+
+    void UI::AskNameMoveUp()
+    {
+        m_askNameIndex--;
+        if (m_askNameIndex < 0) m_askNameIndex = 1;
+        UpdateAskNameVisual();
+    }
+
+    void UI::AskNameMoveDown()
+    {
+        m_askNameIndex++;
+        if (m_askNameIndex > 1) m_askNameIndex = 0;
+        UpdateAskNameVisual();
+    }
+
+    int UI::GetAskNameIndex() const
+    {
+        return m_askNameIndex;
+    }
+
+    void UI::DrawAskName(sf::RenderWindow& window) const
+    {
+       
+        sf::RectangleShape bg(sf::Vector2f(640.0f, 520.0f));
+        bg.setFillColor(sf::Color::Black);
+        bg.setOrigin(bg.getSize().x * 0.5f, bg.getSize().y * 0.5f);
+        bg.setPosition((float)WindowWidth * 0.5f, (float)WindowHeight * 0.5f);
+
+        
+        sf::RectangleShape border = bg;
+        border.setFillColor(sf::Color::Transparent);
+        border.setOutlineColor(sf::Color::White);
+        border.setOutlineThickness(4.0f);
+
+        window.draw(bg);
+        window.draw(border);
+
+        window.draw(m_askNameTitle);
+        window.draw(m_askNo);
+        window.draw(m_askYes);
+    }
+
+    void UI::SetNameBuffer(const std::string& name)
+    {
+        m_nameBuffer = name;
+
+        m_nameInputValue.setString(m_nameBuffer);
+        auto b = m_nameInputValue.getLocalBounds();
+        m_nameInputValue.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+    }
+
+    void UI::DrawNameInput(sf::RenderWindow& window) const
+    {
+        sf::RectangleShape bg(sf::Vector2f(640.0f, 520.0f));
+        bg.setFillColor(sf::Color::Black);
+        bg.setOrigin(bg.getSize().x * 0.5f, bg.getSize().y * 0.5f);
+        bg.setPosition((float)WindowWidth * 0.5f, (float)WindowHeight * 0.5f);
+
+        sf::RectangleShape border = bg;
+        border.setFillColor(sf::Color::Transparent);
+        border.setOutlineColor(sf::Color::White);
+        border.setOutlineThickness(4.0f);
+
+        window.draw(bg);
+        window.draw(border);
+
+        window.draw(m_nameInputTitle);
+        window.draw(m_nameInputValue);
+    }
+
+    void UI::SetRecords(const std::vector<RecordEntry>& records)
+    {
+        m_recordsText.clear();
+
+        float y = 210.0f;   
+        int rank = 1;
+
+        for (const auto& r : records)
+        {
+            sf::Text t;
+            t.setFont(m_font);
+            t.setCharacterSize(28);
+            t.setFillColor(sf::Color::White);
+
+            t.setString(std::to_string(rank) + ". " + r.name + "   " + std::to_string(r.score));
+
+            auto b = t.getLocalBounds();
+            t.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+            t.setPosition((float)WindowWidth * 0.5f, y);
+
+            m_recordsText.push_back(t);
+
+            y += 34.0f;
+            rank++;
+        }
+    }
+
+    void UI::DrawRecords(sf::RenderWindow& window) const
+    {
+        window.clear();
+
+        
+        sf::Text title;
+        title.setFont(m_font);
+        title.setString("RECORDS");
+        title.setCharacterSize(56);
+        title.setFillColor(sf::Color::White);
+        {
+            auto b = title.getLocalBounds();
+            title.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+            title.setPosition((float)WindowWidth * 0.5f, 140.0f);
+        }
+
+        window.draw(title);
+
+       
+        for (const auto& t : m_recordsText)
+            window.draw(t);
+
+        
+        sf::Text hint;
+        hint.setFont(m_font);
+        hint.setString("Press Enter to return");
+        hint.setCharacterSize(22);
+        hint.setFillColor(sf::Color(180, 180, 180));
+        {
+            auto b = hint.getLocalBounds();
+            hint.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
+            hint.setPosition((float)WindowWidth * 0.5f, (float)WindowHeight - 90.0f);
+        }
+        window.draw(hint);
     }
 }

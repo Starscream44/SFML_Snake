@@ -13,4 +13,8 @@ namespace SnakeGame
     static constexpr int DefaultAppleCount = 10;
 
     constexpr float MoveInterval = 0.12f;
+
+    constexpr const char* RecordsFileName = "records.txt";
+    constexpr std::size_t RecordsMaxCount = 10;      // Y (top 10)
+	constexpr std::size_t RecordsPopupCount = 5;     // X (топ 5 for popup)
 }
