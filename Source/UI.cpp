@@ -14,6 +14,11 @@ namespace SnakeGame
 
         UpdateText();
        
+        if (!m_uiMoveBuffer.loadFromFile("Resources/Buttons.wav"))
+            return false;
+
+        m_uiMoveSound.setBuffer(m_uiMoveBuffer);
+        m_uiMoveSound.setVolume(60.f);
 
         // --- Main menu texts ---
         m_titleText.setFont(m_font);
@@ -76,7 +81,7 @@ namespace SnakeGame
         UpdateModeVisual();
 
         // --- GameOver texts ---
-        m_gameOverTitle.setFont(m_font);
+        /*m_gameOverTitle.setFont(m_font);
         m_gameOverTitle.setString("GAME OVER");
         m_gameOverTitle.setCharacterSize(56);
         m_gameOverTitle.setFillColor(sf::Color::White);
@@ -84,7 +89,20 @@ namespace SnakeGame
             auto b = m_gameOverTitle.getLocalBounds();
             m_gameOverTitle.setOrigin(b.left + b.width * 0.5f, b.top + b.height * 0.5f);
             m_gameOverTitle.setPosition((float)WindowWidth * 0.5f, 140.0f);
-        }
+        }*/
+ 
+        if (!m_goBgTexture.loadFromFile("Resources/Game_Over.png"))
+            return false;
+
+        m_goBgSprite.setTexture(m_goBgTexture);
+
+        const auto tex = m_goBgTexture.getSize();
+        m_goBgSprite.setScale(
+            float(WindowWidth) / float(tex.x),
+            float(WindowHeight) / float(tex.y)
+        );
+
+        m_goBgSprite.setPosition(0.f, 0.f);
 
         auto setupGOItem = [&](sf::Text& t, const std::string& s, float y)
             {
@@ -98,8 +116,8 @@ namespace SnakeGame
                 t.setPosition((float)WindowWidth * 0.5f, y);
             };
 
-        setupGOItem(m_goRestart, "RESTART", 340.0f);
-        setupGOItem(m_goExit, "EXIT", 420.0f);
+        setupGOItem(m_goRestart, "RESTART", 520.0f);
+        setupGOItem(m_goExit, "EXIT", 570.0f);
 
         m_gameOverIndex = 0;
         UpdateGameOverVisual();
@@ -155,7 +173,42 @@ namespace SnakeGame
             m_nameInputValue.setPosition((float)WindowWidth * 0.5f, 380.0f);
         }
 
+        // --- Shared background for UI screens ---
+        if (m_bgTexture.loadFromFile("Resources/background.png"))
+        {
+            m_bgSprite.setTexture(m_bgTexture);
+
+            const auto ts = m_bgTexture.getSize();
+            if (ts.x > 0 && ts.y > 0)
+            {
+                const float scaleX = (float)WindowWidth / (float)ts.x;
+                const float scaleY = (float)WindowHeight / (float)ts.y;
+                m_bgSprite.setScale(scaleX, scaleY);
+            }
+
+            m_bgSprite.setPosition(0.f, 0.f);
+        }
+
+
+        if (!m_appleEatBuffer.loadFromFile("Resources/AppleEat.wav"))
+        {
+          
+        }
+        else
+        {
+            m_appleEatSound.setBuffer(m_appleEatBuffer);
+            m_appleEatSound.setVolume(70.f); 
+        }
+
+        if (m_crashBuffer.loadFromFile("Resources/Crash.wav"))
+        {
+            m_crashSound.setBuffer(m_crashBuffer);
+            m_crashSound.setVolume(80.f);
+        }
+
         return true;
+
+       
     }
 
     void UI::SetScore(int score)
@@ -181,13 +234,14 @@ namespace SnakeGame
         window.draw(m_scoreText);
     }
 
-    void UI::DrawMainMenu(sf::RenderWindow& window) const
-    {
-        window.draw(m_titleText);
-        window.draw(m_menuStart);
-        window.draw(m_menuRecords);
-        window.draw(m_menuExit);
-    }
+  void UI::DrawMainMenu(sf::RenderWindow& window) const
+{
+    if (m_hasMenuBg)
+    window.draw(m_menuBgSprite);
+    window.draw(m_menuStart);
+    window.draw(m_menuRecords);
+    window.draw(m_menuExit);
+}
 
     void UI::UpdateMainMenuVisual()
     {
@@ -207,6 +261,7 @@ namespace SnakeGame
         m_mainMenuIndex--;
         if (m_mainMenuIndex < 0) m_mainMenuIndex = 2;
         UpdateMainMenuVisual();
+        PlayUIMoveSound();
     }
 
     void UI::MainMenuMoveDown()
@@ -214,6 +269,7 @@ namespace SnakeGame
         m_mainMenuIndex++;
         if (m_mainMenuIndex > 2) m_mainMenuIndex = 0;
         UpdateMainMenuVisual();
+        PlayUIMoveSound();
     }
 
     int UI::GetMainMenuIndex() const
@@ -223,6 +279,8 @@ namespace SnakeGame
 
     void UI::DrawModeSelect(sf::RenderWindow& window) const
     {
+        window.draw(m_bgSprite);
+
         window.draw(m_modeTitle);
         window.draw(m_modeEasy);
         window.draw(m_modeMedium);
@@ -245,6 +303,7 @@ namespace SnakeGame
         m_modeIndex--;
         if (m_modeIndex < 0) m_modeIndex = 2;
         UpdateModeVisual();
+        PlayUIMoveSound();
     }
 
     void UI::ModeMoveDown()
@@ -252,6 +311,7 @@ namespace SnakeGame
         m_modeIndex++;
         if (m_modeIndex > 2) m_modeIndex = 0;
         UpdateModeVisual();
+        PlayUIMoveSound();
     }
 
     int UI::GetModeIndex() const
@@ -261,6 +321,7 @@ namespace SnakeGame
 
     void UI::DrawGameOver(sf::RenderWindow& window) const
     {
+        window.draw(m_goBgSprite);
         window.draw(m_gameOverTitle);
         window.draw(m_goRestart);
         window.draw(m_goExit);
@@ -282,6 +343,7 @@ namespace SnakeGame
         m_gameOverIndex--;
         if (m_gameOverIndex < 0) m_gameOverIndex = 1;
         UpdateGameOverVisual();
+        PlayUIMoveSound();
     }
 
     void UI::GameOverMoveDown()
@@ -289,6 +351,7 @@ namespace SnakeGame
         m_gameOverIndex++;
         if (m_gameOverIndex > 1) m_gameOverIndex = 0;
         UpdateGameOverVisual();
+        PlayUIMoveSound();
     }
 
     int UI::GetGameOverIndex() const
@@ -311,6 +374,7 @@ namespace SnakeGame
         m_askNameIndex--;
         if (m_askNameIndex < 0) m_askNameIndex = 1;
         UpdateAskNameVisual();
+        PlayUIMoveSound();
     }
 
     void UI::AskNameMoveDown()
@@ -318,6 +382,7 @@ namespace SnakeGame
         m_askNameIndex++;
         if (m_askNameIndex > 1) m_askNameIndex = 0;
         UpdateAskNameVisual();
+        PlayUIMoveSound();
     }
 
     int UI::GetAskNameIndex() const
@@ -404,9 +469,8 @@ namespace SnakeGame
 
     void UI::DrawRecords(sf::RenderWindow& window) const
     {
-        window.clear();
+        window.draw(m_bgSprite);
 
-        
         sf::Text title;
         title.setFont(m_font);
         title.setString("RECORDS");
@@ -420,11 +484,9 @@ namespace SnakeGame
 
         window.draw(title);
 
-       
         for (const auto& t : m_recordsText)
             window.draw(t);
 
-        
         sf::Text hint;
         hint.setFont(m_font);
         hint.setString("Press Enter to return");
@@ -436,5 +498,124 @@ namespace SnakeGame
             hint.setPosition((float)WindowWidth * 0.5f, (float)WindowHeight - 90.0f);
         }
         window.draw(hint);
+    }
+
+    bool UI::LoadMenuBackground(const std::string& path)
+    {
+        if (!m_menuBgTexture.loadFromFile(path))
+        {
+            m_hasMenuBg = false;
+            return false;
+        }
+
+        m_menuBgSprite.setTexture(m_menuBgTexture);
+
+       
+        const auto size = m_menuBgTexture.getSize();
+        if (size.x > 0 && size.y > 0)
+        {
+            const float scaleX = (float)WindowWidth / (float)size.x;
+            const float scaleY = (float)WindowHeight / (float)size.y;
+            m_menuBgSprite.setScale(scaleX, scaleY);
+        }
+
+        m_menuBgSprite.setPosition(0.f, 0.f);
+
+        m_hasMenuBg = true;
+        return true;
+    }
+
+    bool UI::LoadPlayground(const std::string& path)
+    {
+        if (!m_texPlayground.loadFromFile(path))
+        {
+            m_hasPlayground = false;
+            return false;
+        }
+
+        m_sprPlayground.setTexture(m_texPlayground);
+
+        
+        const auto ts = m_texPlayground.getSize();
+
+        const float targetW = (float)(GridW * CellSize);
+        const float targetH = (float)(GridH * CellSize);
+
+        m_sprPlayground.setScale(targetW / (float)ts.x, targetH / (float)ts.y);
+
+       
+        m_sprPlayground.setPosition(0.f, (float)HudHeight);
+
+        m_hasPlayground = true;
+        return true;
+    }
+
+    void UI::DrawPlayground(sf::RenderWindow& window) const
+    {
+        if (m_hasPlayground)
+            window.draw(m_sprPlayground);
+    }
+
+    void UI::PlayUIMoveSound()
+    {
+        m_uiMoveSound.stop();
+        m_uiMoveSound.play();
+    }
+
+    void UI::StartGameplayMusic()
+    {
+     
+        if (m_bgMusic.getStatus() == sf::Music::Stopped)
+        {
+            if (!m_bgMusic.openFromFile("Resources/background.wav"))
+                return; 
+            m_bgMusic.setLoop(true);
+            m_bgMusic.setVolume(40.f);
+        }
+
+        if (m_bgMusic.getStatus() != sf::Music::Playing)
+            m_bgMusic.play();
+    }
+
+    void UI::StopGameplayMusic()
+    {
+        if (m_bgMusic.getStatus() == sf::Music::Playing)
+            m_bgMusic.stop();
+    }
+
+    void UI::StartMenuMusic()
+    {
+        
+        if (!m_menuMusicLoaded)
+        {
+            if (!m_menuMusic.openFromFile("Resources/menu.wav"))
+                return; 
+
+            m_menuMusic.setLoop(true);
+            m_menuMusic.setVolume(35.f); 
+            m_menuMusicLoaded = true;
+        }
+
+    
+        if (m_menuMusic.getStatus() != sf::Music::Playing)
+            m_menuMusic.play();
+    }
+
+    void UI::StopMenuMusic()
+    {
+        if (m_menuMusic.getStatus() == sf::Music::Playing)
+            m_menuMusic.stop();
+    }
+
+    void UI::PlayAppleEatSound()
+    {
+        m_appleEatSound.stop();
+        m_appleEatSound.play();
+    }
+
+    void UI::PlayCrashSound()
+    {
+        m_crashSound.stop();
+        m_crashSound.play();
     }
 }

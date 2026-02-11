@@ -7,6 +7,7 @@ namespace SnakeGame
     {
         m_window.create(sf::VideoMode(WindowWidth, WindowHeight), "Snake");
         m_window.setFramerateLimit(60);
+        m_ui.StartMenuMusic();
 
         const int gridW = GridW;
         const int gridH = GridH;
@@ -17,7 +18,12 @@ namespace SnakeGame
         if (!m_ui.LoadFont("Resources/font.ttf"))
             return;
 
+        m_ui.LoadMenuBackground("Resources/menu.png");
+
         m_ui.SetScore(m_score);
+
+        if (!m_ui.LoadPlayground("Resources/playground.png"))
+            return;
 
         if (!m_walls.LoadTexture("Resources/wall.png"))
             return;
@@ -210,11 +216,15 @@ namespace SnakeGame
                 StartNewGame();
                 m_state = GameState::Playing;
                 m_enterHeld = true;
+                m_ui.StopMenuMusic();
+                m_ui.StartGameplayMusic();
             }
         }
 
         if (m_state == GameState::GameOver)
         {
+            m_ui.StopGameplayMusic();
+            m_ui.StartMenuMusic();
             if (enterNow && !m_enterHeld)
             {
                 const int sel = m_ui.GetGameOverIndex(); // 0 Restart, 1 Exit
@@ -229,6 +239,7 @@ namespace SnakeGame
                     m_window.close();
                     m_enterHeld = true;
                 }
+ 
             }
         }
 
@@ -247,6 +258,8 @@ namespace SnakeGame
        
         if (m_state == GameState::AskName)
         {
+            m_ui.StopGameplayMusic();
+            m_ui.StartMenuMusic();
             //NO/YES
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
                 m_ui.AskNameMoveUp();
@@ -303,6 +316,7 @@ namespace SnakeGame
         // death by wall
         if (m_walls.IsWallCell(h))
         {
+            m_ui.PlayCrashSound();
             const bool isHigh = m_records.IsHighScore(m_score, RecordsMaxCount);
 
             if (isHigh)
@@ -328,6 +342,7 @@ namespace SnakeGame
         // death by self
         if (m_snake.IsSelfCollision())
         {
+            m_ui.PlayCrashSound();
             const bool isHigh = m_records.IsHighScore(m_score, RecordsMaxCount);
 
             if (isHigh)
@@ -358,7 +373,7 @@ namespace SnakeGame
             {
                 m_snake.Grow(1);
                 RespawnApple(a);
-
+                m_ui.PlayAppleEatSound();
                 m_score += 1;
 
                 if (m_difficulty == Difficulty::Hard)
@@ -430,8 +445,9 @@ namespace SnakeGame
         hud.setSize(sf::Vector2f((float)WindowWidth, (float)HudHeight));
         hud.setPosition(0.f, 0.f);
         hud.setFillColor(sf::Color(40, 80, 40));
+        
         m_window.draw(hud);
-
+        m_ui.DrawPlayground(m_window);
         m_walls.Draw(m_window);
 
         for (const auto& a : m_apples)

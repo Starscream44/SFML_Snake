@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <string>
 #include <vector>
 
@@ -28,8 +29,8 @@ namespace SnakeGame
         void ModeMoveDown();
 
         int GetModeIndex() const;
-        
-		//game over screen
+
+        //game over screen
         void DrawGameOver(sf::RenderWindow& window) const;
         void GameOverMoveUp();
         void GameOverMoveDown();
@@ -49,6 +50,21 @@ namespace SnakeGame
 
         void DrawRecords(sf::RenderWindow& window) const;
 
+        bool LoadMenuBackground(const std::string& path = "Resources/menu.png");
+
+        bool LoadPlayground(const std::string& path = "Resources/playground.png");
+        void DrawPlayground(sf::RenderWindow& window) const;
+
+        sf::Music m_bgMusic;
+        void StartGameplayMusic();
+        void StopGameplayMusic();
+        void StartMenuMusic();
+        void StopMenuMusic();
+
+        void PlayAppleEatSound();
+
+        void PlayCrashSound();
+
     private:
         void UpdateText();
 
@@ -57,7 +73,7 @@ namespace SnakeGame
 
         int m_score = 0;
 
-		// Main Menu Texts
+        // Main Menu Texts
         sf::Text m_titleText;
         sf::Text m_menuStart;
         sf::Text m_menuRecords;
@@ -66,7 +82,7 @@ namespace SnakeGame
         int m_mainMenuIndex = 0;
         void UpdateMainMenuVisual();
 
-		// Mode Select Texts
+        // Mode Select Texts
         sf::Text m_modeTitle;
         sf::Text m_modeEasy;
         sf::Text m_modeMedium;
@@ -75,10 +91,14 @@ namespace SnakeGame
         int m_modeIndex = 0;
         void UpdateModeVisual();
 
-		// Game Over Texts
+        // Game Over Texts
         sf::Text m_gameOverTitle;
         sf::Text m_goRestart;
         sf::Text m_goExit;
+
+        // Game Over background
+        sf::Texture m_goBgTexture;
+        sf::Sprite  m_goBgSprite;
 
         int m_gameOverIndex = 0;
         void UpdateGameOverVisual();
@@ -96,6 +116,31 @@ namespace SnakeGame
         sf::Text m_nameInputTitle;
         sf::Text m_nameInputValue;
         std::string m_nameBuffer = "XYZ";
+
+        sf::Texture m_texPlayground;
+        sf::Sprite  m_sprPlayground;
+        bool m_hasPlayground = false;
+
+        sf::Texture m_menuBgTexture;
+        sf::Sprite  m_menuBgSprite;
+        bool m_hasMenuBg = false;
+
+        sf::Texture m_bgTexture;
+        sf::Sprite  m_bgSprite;
+
+        // UI navigate sound (focus move)
+        sf::SoundBuffer m_uiMoveBuffer;
+        sf::Sound       m_uiMoveSound;
+        void PlayUIMoveSound();
+
+        sf::Music m_menuMusic;
+        bool m_menuMusicLoaded = false;
+
+        sf::SoundBuffer m_appleEatBuffer;
+        sf::Sound       m_appleEatSound;
+
+        sf::SoundBuffer m_crashBuffer;
+        sf::Sound       m_crashSound;
 
     };
 }
